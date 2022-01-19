@@ -11,12 +11,16 @@ bl_info = {
 }
 
 import bpy
+from mmd_toolsAddon import calcfun
+from mmd_toolsAddon import check
 
 class RigidBodies_Add(bpy.types.Operator):
     bl_idname = "rigidbodies.add"
     bl_label = "添加刚体群"
 
     def execute(self,context):
+        pol_list = calcfun.get_polygons()
+        calcfun.add_rigidbodies(pol_list)
         return {"FINISHED"}
 
 class Joint_Add(bpy.types.Operator):
@@ -36,21 +40,22 @@ class PhyBone_Add(bpy.types.Operator):
 class RB_PT_View3D(bpy.types.Panel):
     bl_idname = "MMDPA_RB"
     bl_label = "刚体"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'MMDPA'
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "MMDPA"
 
     def draw(self,context):
         layout = self.layout
         row = layout.row()
         row.operator("rigidbodies.add",text="添加刚体群",icon="CUBE")
+        row.enabled = check.check_mode()
 
 class Joint_PT_View3D(bpy.types.Panel):
     bl_idname = "MMDPA_Joint"
     bl_label = "Joint"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'MMDPA'
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "MMDPA"
 
     def draw(self,context):
         layout = self.layout
@@ -60,9 +65,9 @@ class Joint_PT_View3D(bpy.types.Panel):
 class Bone_PT_View3D(bpy.types.Panel):
     bl_idname = "MMDPA_Bone"
     bl_label = "骨骼"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'MMDPA'
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "MMDPA"
 
     def draw(self,context):
         layout = self.layout
