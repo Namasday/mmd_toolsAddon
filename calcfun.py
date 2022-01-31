@@ -7,15 +7,26 @@ def get_polygons():
     pol_list = []
     obj_list = bpy.context.selected_objects
 
-    for obj in obj_list:    #obj是物体数据
-        pol_list.append([obj,obj.data.polygons])
+    if bpy.context.mode == 'OBJECT':
+        for obj in obj_list:
+            pol_list.append([obj,obj.data.polygons])
+    if bpy.context.mode == 'EDIT_MESH':
+        bpy.ops.object.editmode_toggle()    #从编辑模式切换回物体模式，确定其选择的面
+        for obj in obj_list:
+            pol_slist = []      #选择的面存入该列表
+            for pol in obj.data.polygons:
+                if pol.select:
+                    pol_slist.append(pol)
+
+            pol_list.append([obj, pol_slist])
 
     return pol_list
 
 def add_rigidbodies(lst,coe_x=1,coe_y=1,coe_z=1):
-    quantity = 0
+    obj_selected = []
 
     for obj in lst:
+        quantity = 0
         for pol in obj[1]:
             #提取构成面的顶点编号存入point_number
             point_number = list(pol.vertices)
@@ -118,14 +129,18 @@ def add_rigidbodies(lst,coe_x=1,coe_y=1,coe_z=1):
             name_en = obj[0].name + '.RigidE.' + str(quantity)
             quantity += 1
 
-            if size_y < 0.05:
-                size_y = 0.05
+            if size_y < 0.005:
+                size_y = 0.005
 
             size_x = 0.2 * coe_x * size_x
             size_y = 0.2 * coe_y * size_y
             size_z = 0.2 * coe_z * size_z
 
-            bpy.ops.mmd_tools.rigid_body_add(name_j=name, name_e=name_en, rigid_type='1', rigid_shape='BOX',size=(size_x,size_y,size_z))
+            bpy.ops.mmd_tools.rigid_body_add(name_j=name,
+                                             name_e=name_en,
+                                             rigid_type='1',
+                                             rigid_shape='BOX',
+                                             size=(size_x,size_y,size_z))
 
             bpy.data.objects[name].location[0] = loc[0]
             bpy.data.objects[name].location[1] = loc[1]
@@ -133,3 +148,9 @@ def add_rigidbodies(lst,coe_x=1,coe_y=1,coe_z=1):
             bpy.data.objects[name].rotation_euler[2] = angel_z
             bpy.data.objects[name].rotation_euler[0] = angel_x
             bpy.data.objects[name].rotation_euler[1] = angel_y
+
+            obj_selected.append(name)
+            bpy.data.objects[name].select = False
+
+    for name in obj_selected:
+        bpy.data.objects[name].select = True

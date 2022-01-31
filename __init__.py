@@ -11,75 +11,16 @@ bl_info = {
 }
 
 import bpy
-from mmd_toolsAddon import calcfun
-from mmd_toolsAddon import check
 
-class RigidBodies_Add(bpy.types.Operator):
-    bl_idname = "rigidbodies.add"
-    bl_label = "添加刚体群"
+list_cls = []
+def register_list(cls):
+    list_cls.append(cls)
+    return cls
 
-    def execute(self,context):
-        pol_list = calcfun.get_polygons()
-        calcfun.add_rigidbodies(pol_list)
-        return {"FINISHED"}
-
-class Joint_Add(bpy.types.Operator):
-    bl_idname = "joint.add"
-    bl_label = "添加Joint"
-
-    def execute(self,context):
-        return {"FINISHED"}
-
-class PhyBone_Add(bpy.types.Operator):
-    bl_idname = "phybone.add"
-    bl_label = "添加物理骨骼"
-
-    def execute(self,context):
-        return {"FINISHED"}
-
-class RB_PT_View3D(bpy.types.Panel):
-    bl_idname = "MMDPA_RB"
-    bl_label = "刚体"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "MMDPA"
-
-    def draw(self,context):
-        layout = self.layout
-        row = layout.row()
-        row.operator("rigidbodies.add",text="添加刚体群",icon="CUBE")
-        row.enabled = check.check_mode()
-
-class Joint_PT_View3D(bpy.types.Panel):
-    bl_idname = "MMDPA_Joint"
-    bl_label = "Joint"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "MMDPA"
-
-    def draw(self,context):
-        layout = self.layout
-        row = layout.row()
-        row.operator("joint.add",text="添加Joint",icon="EMPTY_AXIS")
-
-class Bone_PT_View3D(bpy.types.Panel):
-    bl_idname = "MMDPA_Bone"
-    bl_label = "骨骼"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "MMDPA"
-
-    def draw(self,context):
-        layout = self.layout
-        row = layout.row()
-        row.operator("phybone.add",text="添加物理骨骼",icon="BONE_DATA")
-
-list_cls = [RB_PT_View3D,
-            RigidBodies_Add,
-            Joint_PT_View3D,
-            Joint_Add,
-            Bone_PT_View3D,
-            PhyBone_Add]
+from . import (
+    opers,
+    panel
+    )
 
 def register():
     for cls in list_cls:
