@@ -19,10 +19,13 @@ def register_list(cls):
 
 from . import (
     opers,
-    panel
+    panel,
+    properties
     )
 
 def register():
+    properties.props()
+
     for cls in list_cls:
         bpy.utils.register_class(cls)
 

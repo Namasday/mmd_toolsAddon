@@ -1,7 +1,7 @@
 import bpy
 import numpy as np
 
-from mmd_tools import __init__
+import mmd_tools
 
 def get_polygons():
     pol_list = []
@@ -22,7 +22,7 @@ def get_polygons():
 
     return pol_list
 
-def add_rigidbodies(lst,coe_x=1,coe_y=1,coe_z=1):
+def add_rigidbodies(lst):
     obj_selected = []
 
     for obj in lst:
@@ -132,9 +132,9 @@ def add_rigidbodies(lst,coe_x=1,coe_y=1,coe_z=1):
             if size_y < 0.005:
                 size_y = 0.005
 
-            size_x = 0.2 * coe_x * size_x
-            size_y = 0.2 * coe_y * size_y
-            size_z = 0.2 * coe_z * size_z
+            size_x = 0.2 * size_x
+            size_y = 0.2 * size_y
+            size_z = 0.2 * size_z
 
             bpy.ops.mmd_tools.rigid_body_add(name_j=name,
                                              name_e=name_en,

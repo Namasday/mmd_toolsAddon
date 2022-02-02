@@ -1,6 +1,9 @@
 import bpy
 
 from . import register_list
+from . import calcfun
+
+import mmd_tools
 
 @register_list
 class RB_PT_View3D(bpy.types.Panel):
@@ -13,8 +16,12 @@ class RB_PT_View3D(bpy.types.Panel):
     def draw(self,context):
         layout = self.layout
         scene = context.scene
+
         row = layout.row()
         row.operator("rigidbodies.add",text="添加刚体群",icon="CUBE")
+
+        col = layout.column()
+        col.prop(scene,'Coe',text="调整刚体尺寸")
 
 @register_list
 class Joint_PT_View3D(bpy.types.Panel):
