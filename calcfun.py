@@ -154,3 +154,87 @@ def add_rigidbodies(lst):
 
     for name in obj_selected:
         bpy.data.objects[name].select = True
+
+def add_phybones():
+    if bpy.context.mode == 'EDIT_MESH':
+        bpy.ops.object.editmode_toggle()    #从编辑模式切换回物体模式，确定其选择的边
+
+    obj_list = bpy.context.selected_objects
+    bpy.ops.object.select_hierarchy(direction='PARENT',extend=False)
+    arm = bpy.context.object
+    bpy.ops.object.editmode_toggle()
+
+    for obj in obj_list:
+        edge_list = []      #选择的边存入该列表
+        for edge in obj.data.edges:
+            if edge.select:
+                edge_list.append(edge)
+
+        #将选择边列表分成连接边列表的列表
+        edge_connect = []
+        for edge in edge_list:
+            if not edge_connect:
+                edge_connect.append([edge])
+            else:
+                for edge_conlist in edge_connect:
+                    index0 = edge_conlist[0].vertices
+                    index1 = edge_conlist[-1].vertices
+
+                    check = False
+                    for index in edge.vertices:
+                        if index in index0:
+                            edge_conlist.append(edge)
+                            check = True
+                            break
+                        elif index in index1:
+                            edge_conlist.insert(0,edge)
+                            check = True
+                            break
+                        else:
+                            continue
+
+                    if check:
+                        break
+
+                else:
+                    edge_connect.append([edge])
+
+        i = 0
+        for edge_conlist in edge_connect:
+            #连接的边按顺序提取点编号
+            point_index_list = []
+            for edge in edge_conlist:
+                if not point_index_list:
+                    try:
+                        if edge_conlist[1].vertices[0] == edge_conlist[0].vertices[1] or edge_conlist[1].vertices[1] == \
+                                edge_conlist[0].vertices[1]:
+                            point_index_list = [edge.vertices[0], edge.vertices[1]]
+                        else:
+                            point_index_list = [edge.vertices[1], edge.vertices[0]]
+                    except:
+                        point_index_list = [edge.vertices[0], edge.vertices[1]]
+                else:
+                    if edge.vertices[0] in point_index_list:
+                        point_index_list.append(edge.vertices[1])
+                    else:
+                        point_index_list.append(edge.vertices[0])
+
+            #根据顺序建立骨骼
+            bone = arm.data.edit_bones.new(name=obj.name + str(i))
+            bone.head = obj.data.vertices[point_index_list[0]].co
+            bone.tail = obj.data.vertices[point_index_list[1]].co
+            for index,value in enumerate(point_index_list):
+                if index < 2:
+                    continue
+                else:
+                    vector_miner = obj.data.vertices[value].co - obj.data.vertices[point_index_list[index-1]].co
+
+                bpy.ops.armature.extrude_move(TRANSFORM_OT_translate={"value": vector_miner})
+
+            #取消尾部选择
+            bpy.ops.object.editmode_toggle()
+            for bon in arm.data.bones:
+                bon.select_tail = False
+            bpy.ops.object.editmode_toggle()
+
+            i += 1

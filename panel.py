@@ -35,6 +35,7 @@ class Joint_PT_View3D(bpy.types.Panel):
         layout = self.layout
         row = layout.row()
         row.operator("joint.add",text="添加Joint",icon="EMPTY_AXIS")
+        row.enabled = False
 
 @register_list
 class Bone_PT_View3D(bpy.types.Panel):
