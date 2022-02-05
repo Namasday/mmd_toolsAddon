@@ -48,4 +48,8 @@ class Bone_PT_View3D(bpy.types.Panel):
     def draw(self,context):
         layout = self.layout
         row = layout.row()
-        row.operator("phybone.add",text="添加物理骨骼",icon="BONE_DATA")
+        row.operator("phybone.add",text="添加骨骼",icon="BONE_DATA")
+
+        row = layout.row(align=True)
+        row.operator("phybonemask.add",text="创建骨骼遮罩",icon="CLIPUV_DEHLT")
+        row.operator("phybonemask.release", text="释放骨骼遮罩", icon="CLIPUV_HLT")

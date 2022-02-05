@@ -26,7 +26,27 @@ def add_rigidbodies(lst):
     obj_selected = []
 
     for obj in lst:
-        quantity = 0
+        #名称控制
+        check = False
+        obj1_lst = []
+        rname = obj[0].name + '.Rigid.'
+        for obj1 in bpy.data.objects:
+            if rname in obj1.name:
+                check = True
+                obj1_lst.append(obj1)
+
+        if check:
+            lst1 = []
+            for obj1 in obj1_lst:
+                lst = obj1.name.split(sep='.')
+                index = int(lst[2])
+                lst1.append(index)
+
+            lst1.sort()
+            quantity = lst1[-1] + 1
+        else:
+            quantity = 0
+
         for pol in obj[1]:
             #提取构成面的顶点编号存入point_number
             point_number = list(pol.vertices)
@@ -162,6 +182,13 @@ def add_phybones():
     obj_list = bpy.context.selected_objects
     bpy.ops.object.select_hierarchy(direction='PARENT',extend=False)
     arm = bpy.context.object
+
+    #取消选择
+    for bon in arm.data.bones:
+        bon.select = False
+        bon.select_head = False
+        bon.select_tail = False
+
     bpy.ops.object.editmode_toggle()
 
     for obj in obj_list:
@@ -199,7 +226,28 @@ def add_phybones():
                 else:
                     edge_connect.append([edge])
 
-        i = 0
+        #名称控制
+        check = False
+        bon_lst = []
+        for bon in arm.data.bones:
+            if obj.name in bon.name:
+                check = True
+                bon_lst.append(bon)
+
+        if check:
+            lenth = len(obj.name)
+            lst1 = []
+            for bon in bon_lst:
+                lst = bon.name.split(sep='.')
+                index = int(lst[0][lenth:])
+                lst1.append(index)
+
+            lst1.sort()
+            i = lst1[-1] + 1
+        else:
+            i = 0
+
+        #建立骨骼
         for edge_conlist in edge_connect:
             #连接的边按顺序提取点编号
             point_index_list = []
@@ -231,10 +279,36 @@ def add_phybones():
 
                 bpy.ops.armature.extrude_move(TRANSFORM_OT_translate={"value": vector_miner})
 
-            #取消尾部选择
+            # 取消选择
             bpy.ops.object.editmode_toggle()
             for bon in arm.data.bones:
                 bon.select_tail = False
             bpy.ops.object.editmode_toggle()
 
             i += 1
+
+def add_phybonemask(context):
+    if bpy.context.mode == 'EDIT_ARMATURE':
+        bpy.ops.object.editmode_toggle()    #切换物体模式确定选择的骨骼
+
+    mask = []
+    origin = []
+    for bone in context.object.data.bones:
+        if bone.use_deform:
+            origin.append(bone)
+            bone.use_deform = False
+
+        if bone.select:
+            mask.append(bone)
+
+    for bone in mask:
+        bone.use_deform = True
+
+    return origin
+
+def release_phybonemask(origin):
+    if bpy.context.mode == 'EDIT_ARMATURE':
+        bpy.ops.object.editmode_toggle()
+
+    for bone in origin:
+        bone.use_deform = True

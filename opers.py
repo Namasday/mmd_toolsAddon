@@ -25,11 +25,38 @@ class Joint_OT_Add(bpy.types.Operator):
 @register_list
 class PhyBone_OT_Add(bpy.types.Operator):
     bl_idname = "phybone.add"
-    bl_label = "添加物理骨骼"
-    bl_options = {"UNDO"}
-
-    exchange_direction : bpy.props.BoolProperty(name="exchangedirection",)
+    bl_label = "添加骨骼"
 
     def execute(self,context):
-        edge_list = calcfun.add_phybones()
+        calcfun.add_phybones()
+        return {"FINISHED"}
+
+@register_list
+class PhyBoneMask_OT_Add(bpy.types.Operator):
+    bl_idname = "phybonemask.add"
+    bl_label = "创建骨骼遮罩"
+
+    origin = []
+
+    @classmethod
+    def poll(cls,context):
+        return len(cls.origin) == 0
+
+    def execute(self,context):
+        self.obj = context.object
+        PhyBoneMask_OT_Add.origin = calcfun.add_phybonemask(context)
+        return {"FINISHED"}
+
+@register_list
+class PhyBoneMask_OT_Release(bpy.types.Operator):
+    bl_idname = "phybonemask.release"
+    bl_label = "释放骨骼遮罩"
+
+    @classmethod
+    def poll(cls,context):
+        return len(PhyBoneMask_OT_Add.origin) > 0
+
+    def execute(self,context):
+        calcfun.release_phybonemask(PhyBoneMask_OT_Add.origin)
+        PhyBoneMask_OT_Add.origin = []
         return {"FINISHED"}
