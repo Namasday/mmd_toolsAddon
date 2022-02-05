@@ -175,6 +175,39 @@ def add_rigidbodies(lst):
     for name in obj_selected:
         bpy.data.objects[name].select = True
 
+def rbbone_connect(context):
+    bone_list = []
+
+    #切换骨骼的编辑模式确定骨骼中心坐标
+    rb_list = context.selected_objects
+    try:
+        arm = context.object.constraints["mmd_tools_rigid_parent"].target
+        active = context.object
+    except:
+        arm = rb_list[0].constraints["mmd_tools_rigid_parent"].target
+        active = rb_list[0]
+
+    context.view_layer.objects.active = arm
+    bpy.ops.object.editmode_toggle()
+
+    for bone in arm.data.edit_bones:
+        if bone.use_deform:
+            bone_list.append(bone)
+
+    for rb in context.selected_objects:
+        dis_list = []
+        for bone in bone_list:
+            vec = np.array(rb.location - bone.center)
+            distance = np.linalg.norm(vec)
+            dis_list.append(distance)
+
+        i = dis_list.index(min(dis_list))
+        rb.mmd_rigid.bone = bone_list[i].name
+
+    #切回选择
+    bpy.ops.object.editmode_toggle()
+    context.view_layer.objects.active = active
+
 def add_phybones():
     if bpy.context.mode == 'EDIT_MESH':
         bpy.ops.object.editmode_toggle()    #从编辑模式切换回物体模式，确定其选择的边

@@ -15,6 +15,15 @@ class RigidBodies_OT_Add(bpy.types.Operator):
         return {"FINISHED"}
 
 @register_list
+class RBBone_OT_Connect(bpy.types.Operator):
+    bl_idname = "rbbone.connect"
+    bl_label = "刚体附着骨骼"
+
+    def execute(self,context):
+        calcfun.rbbone_connect(context)
+        return {"FINISHED"}
+
+@register_list
 class Joint_OT_Add(bpy.types.Operator):
     bl_idname = "joint.add"
     bl_label = "添加Joint"

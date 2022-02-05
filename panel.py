@@ -23,6 +23,9 @@ class RB_PT_View3D(bpy.types.Panel):
         col = layout.column()
         col.prop(scene,'Coe',text="调整刚体尺寸")
 
+        row = layout.row()
+        row.operator("rbbone.connect", text="刚体附着骨骼", icon="BONE_DATA")
+
 @register_list
 class Joint_PT_View3D(bpy.types.Panel):
     bl_idname = "MMDPA_PT_Joint"
