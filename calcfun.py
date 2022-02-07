@@ -233,31 +233,44 @@ def add_phybones():
         #将选择边列表分成连接边列表的列表
         edge_connect = []
         for edge in edge_list:
-            if not edge_connect:
-                edge_connect.append([edge])
-            else:
-                for edge_conlist in edge_connect:
-                    index0 = edge_conlist[0].vertices
-                    index1 = edge_conlist[-1].vertices
+            edge_list.remove(edge)
+            front = edge.vertices[0]
+            behind = edge.vertices[1]
+            point_index_list = [front,behind]
 
-                    check = False
-                    for index in edge.vertices:
-                        if index in index0:
-                            edge_conlist.append(edge)
-                            check = True
-                            break
-                        elif index in index1:
-                            edge_conlist.insert(0,edge)
-                            check = True
-                            break
-                        else:
-                            continue
-
-                    if check:
+            while True:
+                for edge1 in edge_list:
+                    if behind == edge1.vertices[0]:
+                        behind = edge1.vertices[1]
+                        point_index_list.append(behind)
+                        edge_list.remove(edge1)
                         break
 
+                    elif behind == edge1.vertices[1]:
+                        behind = edge1.vertices[0]
+                        point_index_list.append(behind)
+                        edge_list.remove(edge1)
+                        break
                 else:
-                    edge_connect.append([edge])
+                    break
+
+            while True:
+                for edge1 in edge_list:
+                    if front == edge1.vertices[0]:
+                        front = edge1.vertices[1]
+                        point_index_list.insert(0,front)
+                        edge_list.remove(edge1)
+                        break
+
+                    elif front == edge1.vertices[1]:
+                        front = edge1.vertices[0]
+                        point_index_list.insert(0,front)
+                        edge_list.remove(edge1)
+                        break
+                else:
+                    break
+
+            edge_connect.append(point_index_list)
 
         #名称控制
         check = False
@@ -281,25 +294,7 @@ def add_phybones():
             i = 0
 
         #建立骨骼
-        for edge_conlist in edge_connect:
-            #连接的边按顺序提取点编号
-            point_index_list = []
-            for edge in edge_conlist:
-                if not point_index_list:
-                    try:
-                        if edge_conlist[1].vertices[0] == edge_conlist[0].vertices[1] or edge_conlist[1].vertices[1] == \
-                                edge_conlist[0].vertices[1]:
-                            point_index_list = [edge.vertices[0], edge.vertices[1]]
-                        else:
-                            point_index_list = [edge.vertices[1], edge.vertices[0]]
-                    except:
-                        point_index_list = [edge.vertices[0], edge.vertices[1]]
-                else:
-                    if edge.vertices[0] in point_index_list:
-                        point_index_list.append(edge.vertices[1])
-                    else:
-                        point_index_list.append(edge.vertices[0])
-
+        for point_index_list in edge_connect:
             #根据顺序建立骨骼
             bone = arm.data.edit_bones.new(name=obj.name + str(i))
             bone.head = obj.data.vertices[point_index_list[0]].co
