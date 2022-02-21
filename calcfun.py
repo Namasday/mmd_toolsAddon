@@ -3,14 +3,14 @@ import numpy as np
 
 import mmd_tools
 
-def get_polygons():
+def get_polygons(context):
     pol_list = []
     obj_list = bpy.context.selected_objects
 
-    if bpy.context.mode == 'OBJECT':
+    if context.mode == 'OBJECT':
         for obj in obj_list:
             pol_list.append([obj,obj.data.polygons])
-    if bpy.context.mode == 'EDIT_MESH':
+    if context.mode == 'EDIT_MESH':
         bpy.ops.object.editmode_toggle()    #从编辑模式切换回物体模式，确定其选择的面
         for obj in obj_list:
             pol_slist = []      #选择的面存入该列表
@@ -22,14 +22,15 @@ def get_polygons():
 
     return pol_list
 
-def add_rigidbodies(lst):
+def add_rigidbodies(context,lst):
     obj_selected = []
 
     for obj in lst:
         #名称控制
+        name0 = obj[0].name.split(sep='.')
         check = False
         obj1_lst = []
-        rname = obj[0].name + '.Rigid.'
+        rname = name0[0] + '.Rigid.'
         for obj1 in bpy.data.objects:
             if rname in obj1.name:
                 check = True
@@ -49,7 +50,7 @@ def add_rigidbodies(lst):
 
         for pol in obj[1]:
             #提取构成面的顶点编号存入point_number
-            point_number = list(pol.vertices)
+            point_number = pol.vertices
 
             #提取每个面对应的刚体的中心
             loc = pol.center
@@ -60,8 +61,7 @@ def add_rigidbodies(lst):
             #计算刚体旋转
             faces_normal = np.array(faces_normal)
             world_vector = np.array([0, 1, 0])
-            for i in range(3):
-                faces_normal[i] = -faces_normal[i]
+            faces_normal = -faces_normal
 
             tr1 = np.array(faces_normal)
             faces_normal[2] = 0
@@ -145,35 +145,49 @@ def add_rigidbodies(lst):
             size_z = sum / times
 
             #根据计算数据新建刚体并导入数据
-            name = obj[0].name + '.Rigid.' + str(quantity)
-            name_en = obj[0].name + '.RigidE.' + str(quantity)
+            name = name0[0] + '.Rigid.' + str(quantity)
+            name_en = name0[0] + '.RigidE.' + str(quantity)
             quantity += 1
 
             if size_y < 0.005:
                 size_y = 0.005
 
-            size_x = 0.2 * size_x
-            size_y = 0.2 * size_y
-            size_z = 0.2 * size_z
+            size = [size_x * 0.2, size_y * 0.2, size_z * 0.2]
 
             bpy.ops.mmd_tools.rigid_body_add(name_j=name,
                                              name_e=name_en,
                                              rigid_type='1',
                                              rigid_shape='BOX',
-                                             size=(size_x,size_y,size_z))
+                                             size=size)
 
-            bpy.data.objects[name].location[0] = loc[0]
-            bpy.data.objects[name].location[1] = loc[1]
-            bpy.data.objects[name].location[2] = loc[2]
-            bpy.data.objects[name].rotation_euler[2] = angel_z
-            bpy.data.objects[name].rotation_euler[0] = angel_x
-            bpy.data.objects[name].rotation_euler[1] = angel_y
+            context.object.location = loc
+            context.object.rotation_euler = [angel_x,angel_y,angel_z]
 
-            obj_selected.append(name)
-            bpy.data.objects[name].select = False
+            obj_selected.append(context.object)
 
-    for name in obj_selected:
-        bpy.data.objects[name].select = True
+    for obj in obj_selected:
+        obj.select = True
+
+def mirror_rigidbodies(context):
+    obj_lst = context.selected_objects
+    obj_selected = []
+    for obj in obj_lst:
+        name = obj.mmd_rigid.name_j + "X"
+        name_en = obj.mmd_rigid.name_e + "X"
+        size = obj.mmd_rigid.size * 0.2
+        type = obj.mmd_rigid.type
+        shape = obj.mmd_rigid.shape
+        bpy.ops.mmd_tools.rigid_body_add(name_j=name,
+                                         name_e=name_en,
+                                         rigid_type=type,
+                                         rigid_shape=shape,
+                                         size=size)
+        context.object.location = [-obj.location[0],obj.location[1],obj.location[2]]
+        context.object.rotation_euler = [obj.rotation_euler[0],-obj.rotation_euler[1],-obj.rotation_euler[2]]
+        obj_selected.append(context.object)
+
+    for obj in obj_selected:
+        obj.select = True
 
 def rbbone_connect(context):
     bone_list = []
@@ -273,19 +287,25 @@ def add_phybones():
             edge_connect.append(point_index_list)
 
         #名称控制
+        name0 = obj.name.split(sep='.')
+        name0 = name0[0]
         check = False
         bon_lst = []
         for bon in arm.data.bones:
-            if obj.name in bon.name:
+            if name0 in bon.name:
                 check = True
                 bon_lst.append(bon)
 
         if check:
-            lenth = len(obj.name)
+            lenth = len(name0)
             lst1 = []
             for bon in bon_lst:
                 lst = bon.name.split(sep='.')
-                index = int(lst[0][lenth:])
+                try:
+                    index = int(lst[0][lenth:])
+                except:
+                    index = 0
+
                 lst1.append(index)
 
             lst1.sort()
@@ -296,7 +316,7 @@ def add_phybones():
         #建立骨骼
         for point_index_list in edge_connect:
             #根据顺序建立骨骼
-            bone = arm.data.edit_bones.new(name=obj.name + str(i))
+            bone = arm.data.edit_bones.new(name=name0 + str(i))
             bone.head = obj.data.vertices[point_index_list[0]].co
             bone.tail = obj.data.vertices[point_index_list[1]].co
             for index,value in enumerate(point_index_list):

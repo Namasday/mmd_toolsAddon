@@ -24,6 +24,7 @@ class RB_PT_View3D(bpy.types.Panel):
         col.prop(scene,'Coe',text="调整刚体尺寸")
 
         row = layout.row()
+        row.operator("rigidbodies.mirror",text="添加镜像刚体",icon="CUBE")
         row.operator("rbbone.connect", text="刚体附着骨骼", icon="BONE_DATA")
 
 @register_list
